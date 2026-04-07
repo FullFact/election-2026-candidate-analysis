@@ -1,0 +1,42 @@
+[project]
+name = "python-template"
+version = "1.0.0"
+description = "A template for Python projects"
+authors = [{ name = "Full Fact", email = "afc@fullfact.org" }]
+requires-python = ">=3.12"
+readme = "README.md"
+maintainers = [{ name = "Full Fact", email = "afc@fullfact.org" }]
+
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "structlog>=25.4.0",
+    "pydantic>=2.11.10",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=6.0.0",
+    "isort>=5.13.3",
+    "mypy>=1.4.1",
+    "pre-commit>=3.3.3",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore:Deprecated call to `pkg_resources.declare_namespace\\('.*'\\):DeprecationWarning",
+    "ignore::DeprecationWarning:google.rpc",
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+warn_unused_configs = true
+disallow_untyped_calls = true
+check_untyped_defs = true
