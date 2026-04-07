@@ -9,3 +9,4 @@ Analysis of candidates from elections across the UK (May 2026).
 * `uv sync` to update packages
 * `pre-commit install` to add pre-commit
 
+The `raw_data` folder contains the raw data (at the moment, from Democracy Club).
