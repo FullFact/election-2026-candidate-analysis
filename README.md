@@ -1,3 +1,10 @@
-# Python template
+# Elections 2026 Analysis
 
-A template repository.
+Analysis of candidates from elections across the UK (May 2026).
+
+
+## Set up
+* Clone the repo
+* `uv sync` to update packages
+* `pre-commit install` to add pre-commit
+
