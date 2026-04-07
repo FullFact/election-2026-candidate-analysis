@@ -1,0 +1,32 @@
+{
+  "name": "election-2026-candidate-analysis",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/app",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "uv sync --all-groups && uv run pre-commit install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.mypy-type-checker",
+        "ms-python.flake8"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        },
+        "isort.check": true,
+        "mypy-type-checker.importStrategy": "fromEnvironment"
+      }
+    }
+  }
+}
