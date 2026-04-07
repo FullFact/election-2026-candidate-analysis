@@ -3,7 +3,7 @@ name = "python-template"
 version = "1.0.0"
 description = "A template for Python projects"
 authors = [{ name = "Full Fact", email = "afc@fullfact.org" }]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 readme = "README.md"
 maintainers = [{ name = "Full Fact", email = "afc@fullfact.org" }]
 
