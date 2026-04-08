@@ -31,3 +31,6 @@ def getfullelectionjson(df):
 print(getfullelectionjson(df))
 
 print(json.dumps(getfullelectionjson(df),indent = 4))
+filename = "src/data_outputs/candidates.json"
+with open(filename,"w+")as f:
+    json.dump(getfullelectionjson(df),f)
