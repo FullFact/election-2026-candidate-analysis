@@ -23,12 +23,12 @@ def get_list_of_candidate_data(df: pd.DataFrame) -> list[dict]:
     return candidates_data_list
 
 
-def get_candidate_data_by_election_id(df: pd.DataFrame) -> dict:
-    election_ids = df["election_id"].unique()
+def get_candidate_data_by_column(df: pd.DataFrame, column_name: str) -> dict:
+    unique_values = df[column_name].unique()
     output_dictionary = {}
-    for i in election_ids:
-        filtered_df = df[df["election_id"] == i]
-        output_dictionary[i] = get_list_of_candidate_data(filtered_df)
+    for val in unique_values:
+        filtered_df = df[df[column_name] == val]
+        output_dictionary[val] = get_list_of_candidate_data(filtered_df)
     return output_dictionary
 
 
@@ -44,5 +44,5 @@ def write_out_json(data: dict | list, filename_suffix: str) -> None:
 if __name__ == "__main__":
     src_dir = Path(__file__).parent
     df = pd.read_csv(src_dir / "raw_data/dc-candidates-scotland-2026-04-02T16-17-27.csv")
-    result = get_candidate_data_by_election_id(df)
-    write_out_json(data=result, filename_suffix="candidates_by_election")
+    candidates_by_election = get_candidate_data_by_column(df=df, column_name="election_id")
+    write_out_json(data=candidates_by_election, filename_suffix="candidates_by_election")
