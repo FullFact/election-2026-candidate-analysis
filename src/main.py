@@ -46,3 +46,6 @@ if __name__ == "__main__":
     df = pd.read_csv(src_dir / "raw_data/dc-candidates-scotland-2026-04-02T16-17-27.csv")
     candidates_by_election = get_candidate_data_by_column(df=df, column_name="election_id")
     write_out_json(data=candidates_by_election, filename_suffix="candidates_by_election")
+    candidates_by_party_name = get_candidate_data_by_column(df=df, column_name="party_name")
+    write_out_json(data=candidates_by_party_name, filename_suffix="candidates_by_party_name")
+
