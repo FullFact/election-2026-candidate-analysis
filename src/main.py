@@ -1,14 +1,10 @@
-import pandas as pd
 import json
+from pathlib import Path
 
-electid = []
-df = pd.read_csv("src/raw_data/dc-candidates-scotland-2026-04-02T16-17-27.csv")
-print(df.head())
-# for i in range (len(df)):
-#   if df(i,2) != electid:
-#       electid += df(i,2)
+import pandas as pd
+
+
 def getlistofcandidates(df):
-
     allcandidates = []
     for index, row in df.iterrows():
         dictionary = {
@@ -18,19 +14,23 @@ def getlistofcandidates(df):
         }
         allcandidates.append(dictionary)
     return allcandidates
-    print(dictionary)
-print(df["election_id"].unique())
+
+
 def getfullelectionjson(df):
     electionids = df["election_id"].unique()
     dictionary = {}
     for i in electionids:
-        filtereddf = df[df["election_id"]==i]
-        candidatelist = getlistofcandidates(filtereddf)
-        dictionary[i]=candidatelist
+        filtereddf = df[df["election_id"] == i]
+        dictionary[i] = getlistofcandidates(filtereddf)
     return dictionary
-print(getfullelectionjson(df))
 
-print(json.dumps(getfullelectionjson(df),indent = 4))
-filename = "src/data_outputs/candidates.json"
-with open(filename,"w+")as f:
-    json.dump(getfullelectionjson(df),f)
+
+if __name__ == "__main__":
+    src_dir = Path(__file__).parent
+    df = pd.read_csv(src_dir / "raw_data/dc-candidates-scotland-2026-04-02T16-17-27.csv")
+
+    result = getfullelectionjson(df)
+    print(json.dumps(result, indent=4))
+
+    with open(src_dir / "data_outputs/candidates.json", "w+") as f:
+        json.dump(result, f)
