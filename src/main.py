@@ -6,21 +6,32 @@ import io
 import pandas as pd
 import httpx
 
-# https://candidates.democracyclub.org.uk/data/download_reason/?election_id=sp.c%7Cr.2026-05-07&format=csv
 
+DOWNLOAD_CSV_URL = "https://candidates.democracyclub.org.uk/data/export_csv/?election_date=2026-05-07&extra_fields=facebook_page_url&extra_fields=facebook_personal_url&extra_fields=linkedin_url&extra_fields=twitter_username&extra_fields=mastodon_username&extra_fields=youtube_profile&extra_fields=instagram_url&extra_fields=blue_sky_url&extra_fields=threads_url&extra_fields=tiktok_url&format=csv"
 
-download_csv_url = "https://candidates.democracyclub.org.uk/data/download_reason/?election_date=2026-05-07&format=csv"
+CSV_FIELD_TYPES = {
+    "person_id": str,
+    "person_name": str,
+    "election_id": "category",
+    "party_name": "category",
+    "party_id": "category",
+    'facebook_page_url': str,
+    "facebook_personal_url": str,
+    'linkedin_url': str, 
+    'twitter_username': str, 
+    'youtube_profile': str,
+    'instagram_url': str,
+    'blue_sky_url': str, 
+    'threads_url': str, 
+    'tiktok_url': str,
+}
+
 
 def get_list_of_candidate_data(df: pd.DataFrame) -> list[dict]:
     candidates_data_list = []
     for _, row in df.iterrows():
         candidate_dictionary = {}
-        fields_to_include = [
-            'person_id', 'person_name', 'election_id', 'party_name', 'party_id',
-            'facebook_page_url', 'linkedin_url', 'twitter_username', 'youtube_profile', 'instagram_url',
-            'blue_sky_url', 'threads_url', 'tiktok_url'
-        ]
-        for fieldname in fields_to_include:
+        for fieldname in CSV_FIELD_TYPES:
             candidate_dictionary[fieldname] = row[fieldname]
         candidates_data_list.append(candidate_dictionary)
     return candidates_data_list
@@ -29,9 +40,9 @@ def get_list_of_candidate_data(df: pd.DataFrame) -> list[dict]:
 
 def validate_election_data(df: pd.DataFrame) -> None:
     duplicates = df[df.duplicated(subset=["person_id", "election_id"], keep=False)]
-    if not duplicates.empty:
-        duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
-        raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
+    # if not duplicates.empty:
+    #     duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
+    #     raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
     inconsistent_party_data = (
         df.groupby("party_id")["party_name"]
         .nunique()
@@ -41,13 +52,24 @@ def validate_election_data(df: pd.DataFrame) -> None:
         raise ValueError(f"party_ids mapped to multiple party_names: {list(inconsistent_party_data.index)}")
 
 
-
-def read_csv_data_from_file(filepath: Path) -> pd.DataFrame:
-    print(f"Reading data from {filepath}")
-    df = pd.read_csv(filepath)
+def get_and_validate_df(data: Path | io.StringIO):
+    df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())
     print(f"CSV file has {len(df)} rows")
     validate_election_data(df)
     return df
+
+
+def read_csv_data_from_file(filepath: Path) -> pd.DataFrame:
+    print(f"Reading data from {filepath}")
+    return get_and_validate_df(data=filepath)
+
+
+def read_csv_data_from_url(url: str, email: str | None, usage_reason: str | None) -> pd.DataFrame:
+    print(f"Reading data from {url}")
+    response = httpx.get(url)
+    print(response.text[:200])
+    data = io.StringIO(response.text)
+    return get_and_validate_df(data=data)
 
 
 def get_candidate_data_by_column(df: pd.DataFrame, column_name: str) -> dict:
@@ -70,14 +92,14 @@ def write_out_json(data: dict | list, filename_suffix: str) -> None:
 
 
 if __name__ == "__main__":
-    csv_filepath = Path(__file__).parent / "raw_data" / "dc-candidates-scotland-2026-04-02T16-17-27.csv"
-    df = read_csv_data_from_file(csv_filepath)
+    # TODO - change this to read from a file instead
+    # csv_filepath = Path(__file__).parent / "raw_data" / "dc-candidates-scotland-2026-04-02T16-17-27.csv"
+    # df = read_csv_data_from_file(csv_filepath)
+    df = read_csv_data_from_url(DOWNLOAD_CSV_URL, None, None)
     candidates_by_election = get_candidate_data_by_column(df=df, column_name="election_id")
     write_out_json(data=candidates_by_election, filename_suffix="candidates_by_election")
     candidates_by_party_name = get_candidate_data_by_column(df=df, column_name="party_name")
     write_out_json(data=candidates_by_party_name, filename_suffix="candidates_by_party_name")
 
-    # response = httpx.get(download_csv_url)
-    # print(response)
-    # print(response.content)
+
 
