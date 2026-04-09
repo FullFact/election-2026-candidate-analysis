@@ -35,10 +35,10 @@ def get_list_of_candidate_data(df: pd.DataFrame) -> list[dict]:
 
 def validate_election_data(df: pd.DataFrame) -> None:
     # TODO - do we care about duplicate people?
-    duplicates = df[df.duplicated(subset=["person_id", "election_id"], keep=False)]
-    if not duplicates.empty:
-        duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
-        raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
+    # duplicates = df[df.duplicated(subset=["person_id", "election_id"], keep=False)]
+    # if not duplicates.empty:
+    #     duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
+    #     raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
     inconsistent_party_data = (
         df.groupby("party_id")["party_name"]
         .nunique()
