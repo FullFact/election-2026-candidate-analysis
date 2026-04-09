@@ -1,13 +1,12 @@
+import io
 import json
 from datetime import datetime
 from pathlib import Path
-import io
 
-import pandas as pd
 import httpx
+import pandas as pd
 
-
-DOWNLOAD_CSV_URL = "https://candidates.democracyclub.org.uk/data/export_csv/?election_date=2026-05-07&extra_fields=facebook_page_url&extra_fields=facebook_personal_url&extra_fields=linkedin_url&extra_fields=twitter_username&extra_fields=mastodon_username&extra_fields=youtube_profile&extra_fields=instagram_url&extra_fields=blue_sky_url&extra_fields=threads_url&extra_fields=tiktok_url&format=csv"
+DOWNLOAD_CSV_URL = "https://candidates.democracyclub.org.uk/data/export_csv/?election_date=2026-05-07&extra_fields=facebook_page_url&extra_fields=facebook_personal_url&extra_fields=linkedin_url&extra_fields=twitter_username&extra_fields=mastodon_username&extra_fields=youtube_profile&extra_fields=instagram_url&extra_fields=blue_sky_url&extra_fields=threads_url&extra_fields=tiktok_url&format=csv"  # noqa
 
 CSV_FIELD_TYPES = {
     "person_id": str,
@@ -40,15 +39,15 @@ def validate_election_data(df: pd.DataFrame) -> None:
     #     duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
     #     raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
     inconsistent_party_data = (
-        df.groupby("party_id")["party_name"]
-        .nunique()
-        .loc[lambda s: s > 1]
+        df.groupby("party_id")["party_name"].nunique().loc[lambda s: s > 1]
     )
     if not inconsistent_party_data.empty:
-        raise ValueError(f"party_ids mapped to multiple party_names: {list(inconsistent_party_data.index)}")
+        raise ValueError(
+            f"party_ids mapped to multiple party_names: {list(inconsistent_party_data.index)}"
+        )
 
 
-def get_and_validate_df(data: Path | io.StringIO) -> pd.DataFrame: 
+def get_and_validate_df(data: Path | io.StringIO) -> pd.DataFrame:
     df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())  # type: ignore
     df[STR_COLS] = df[STR_COLS].apply(lambda col: col.str.strip('"'))
     print(f"CSV file has {len(df)} rows")
@@ -92,7 +91,15 @@ if __name__ == "__main__":
     # csv_filepath = Path(__file__).parent / "raw_data" / "dc-candidates-scotland-2026-04-02T16-17-27.csv"
     # df = read_csv_data_from_file(csv_filepath)
     df = read_csv_data_from_url(DOWNLOAD_CSV_URL)
-    candidates_by_election = get_candidate_data_by_column(df=df, column_name="election_id")
-    write_out_json(data=candidates_by_election, filename_suffix="candidates_by_election")
-    candidates_by_party_name = get_candidate_data_by_column(df=df, column_name="party_name")
-    write_out_json(data=candidates_by_party_name, filename_suffix="candidates_by_party_name")
+    candidates_by_election = get_candidate_data_by_column(
+        df=df, column_name="election_id"
+    )
+    write_out_json(
+        data=candidates_by_election, filename_suffix="candidates_by_election"
+    )
+    candidates_by_party_name = get_candidate_data_by_column(
+        df=df, column_name="party_name"
+    )
+    write_out_json(
+        data=candidates_by_party_name, filename_suffix="candidates_by_party_name"
+    )

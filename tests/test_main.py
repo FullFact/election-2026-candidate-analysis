@@ -4,11 +4,11 @@ import pandas as pd
 import pytest
 
 from main import (  # type: ignore
+    CSV_FIELD_TYPES,
+    get_and_validate_df,
     get_candidate_data_by_column,
     get_list_of_candidate_data,
     validate_election_data,
-    get_and_validate_df,
-    CSV_FIELD_TYPES
 )
 
 ALL_FIELDS = list(CSV_FIELD_TYPES.keys())
@@ -16,22 +16,51 @@ ALL_FIELDS = list(CSV_FIELD_TYPES.keys())
 
 def make_candidate(**overrides) -> dict:
     defaults = {
-        "person_id": "1", "person_name": "Alice Smith",
-        "election_id": "local.2026", "party_name": "Party A", "party_id": "PP1",
-        "facebook_page_url": "", "facebook_personal_url": "", "linkedin_url": "",
-        "twitter_username": "", "youtube_profile": "", "instagram_url": "",
-        "blue_sky_url": "", "threads_url": "", "tiktok_url": "",
+        "person_id": "1",
+        "person_name": "Alice Smith",
+        "election_id": "local.2026",
+        "party_name": "Party A",
+        "party_id": "PP1",
+        "facebook_page_url": "",
+        "facebook_personal_url": "",
+        "linkedin_url": "",
+        "twitter_username": "",
+        "youtube_profile": "",
+        "instagram_url": "",
+        "blue_sky_url": "",
+        "threads_url": "",
+        "tiktok_url": "",
     }
     return {**defaults, **overrides}
 
 
 @pytest.fixture
 def sample_df():
-    return pd.DataFrame([
-        make_candidate(person_id="1", person_name="Alice Smith", election_id="local.2026", party_name="Party A", party_id="PP1"),
-        make_candidate(person_id="2", person_name="Bob Jones", election_id="local.2026", party_name="Party B", party_id="PP2"),
-        make_candidate(person_id="3", person_name="Carol White", election_id="regional.2026", party_name="Party A", party_id="PP1"),
-    ])
+    return pd.DataFrame(
+        [
+            make_candidate(
+                person_id="1",
+                person_name="Alice Smith",
+                election_id="local.2026",
+                party_name="Party A",
+                party_id="PP1",
+            ),
+            make_candidate(
+                person_id="2",
+                person_name="Bob Jones",
+                election_id="local.2026",
+                party_name="Party B",
+                party_id="PP2",
+            ),
+            make_candidate(
+                person_id="3",
+                person_name="Carol White",
+                election_id="regional.2026",
+                party_name="Party A",
+                party_id="PP1",
+            ),
+        ]
+    )
 
 
 class TestGetListOfCandidateData:
@@ -55,11 +84,22 @@ class TestValidateElectionData:
         validate_election_data(sample_df)
 
     def test_raises_on_inconsistent_party_name(self, sample_df):
-        bad_df = pd.concat([
-            sample_df,
-            pd.DataFrame([make_candidate(person_id="4", party_id="PP1", party_name="Different Name")]),
-        ], ignore_index=True)
-        with pytest.raises(ValueError, match="party_ids mapped to multiple party_names"):
+        bad_df = pd.concat(
+            [
+                sample_df,
+                pd.DataFrame(
+                    [
+                        make_candidate(
+                            person_id="4", party_id="PP1", party_name="Different Name"
+                        )
+                    ]
+                ),
+            ],
+            ignore_index=True,
+        )
+        with pytest.raises(
+            ValueError, match="party_ids mapped to multiple party_names"
+        ):
             validate_election_data(bad_df)
 
     def test_same_party_id_same_name_does_not_raise(self, sample_df):
@@ -70,11 +110,20 @@ class TestValidateElectionData:
 class TestGetAndValidateDf:
     def _make_csv(self, rows: list[dict]) -> io.StringIO:
         header = ",".join(ALL_FIELDS)
-        lines = [header] + [",".join(str(row.get(f, "")) for f in ALL_FIELDS) for row in rows]
+        lines = [header] + [
+            ",".join(str(row.get(f, "")) for f in ALL_FIELDS) for row in rows
+        ]
         return io.StringIO("\n".join(lines))
 
     def test_strips_surrounding_quotes_from_string_fields(self):
-        csv = self._make_csv([make_candidate(facebook_page_url='"https://fb.com/alice"', twitter_username='"alice123"')])
+        csv = self._make_csv(
+            [
+                make_candidate(
+                    facebook_page_url='"https://fb.com/alice"',
+                    twitter_username='"alice123"',
+                )
+            ]
+        )
         df = get_and_validate_df(csv)
         assert df.iloc[0]["facebook_page_url"] == "https://fb.com/alice"
         assert df.iloc[0]["twitter_username"] == "alice123"
@@ -83,7 +132,6 @@ class TestGetAndValidateDf:
         csv = self._make_csv([make_candidate()])
         df = get_and_validate_df(csv)
         assert df.iloc[0]["facebook_page_url"] == ""
-
 
 
 class TestGetCandidateDataByColumn:
@@ -102,4 +150,3 @@ class TestGetCandidateDataByColumn:
         result = get_candidate_data_by_column(sample_df, "election_id")
         for candidate in result["local.2026"]:
             assert set(candidate.keys()) == set(ALL_FIELDS)
-
