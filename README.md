@@ -12,7 +12,9 @@ Analysis of candidates from elections across the UK (May 2026).
 
 ## Writing & running code
 
-The `raw_data` folder contains the raw data (at the moment, data on Scottish elections, from Democracy Club).
+The `raw_data` folder contains the raw data from the Democracy Club.
+
+This is regularly updated, you can download the latest data from here: 
 
 You can use `main.py` to run the analysis (`uv run python src/main.py`) or there is a Jupyter Notebook (`exploratory_analysis.ipynb`). Obviously you can create your own files too!
 
