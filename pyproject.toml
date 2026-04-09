@@ -15,6 +15,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "plotly>=6.6.0",
     "httpx>=0.28.1",
+    "pandas-stubs>=3.0.0.260204",
 ]
 
 [dependency-groups]
