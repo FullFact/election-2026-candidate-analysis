@@ -29,3 +29,7 @@ This data from Democracy Club is regularly updated, you can download the latest 
 
 ## Tests
 `uv run pytest .`
+
+
+## Outstanding issues
+* What do we do about duplicate candidates for a given election? There is at least one example of a duplicate candidate in the same election list (looks like they are standing in 2 seats - ID 113862). You might want to deal with this and uncomment the code that checks for this in the `validate_election_data` function.

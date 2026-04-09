@@ -15,34 +15,30 @@ CSV_FIELD_TYPES = {
     "election_id": "category",
     "party_name": "category",
     "party_id": "category",
-    'facebook_page_url': str,
+    "facebook_page_url": str,
     "facebook_personal_url": str,
-    'linkedin_url': str, 
-    'twitter_username': str, 
-    'youtube_profile': str,
-    'instagram_url': str,
-    'blue_sky_url': str, 
-    'threads_url': str, 
-    'tiktok_url': str,
+    "linkedin_url": str,
+    "twitter_username": str,
+    "youtube_profile": str,
+    "instagram_url": str,
+    "blue_sky_url": str,
+    "threads_url": str,
+    "tiktok_url": str,
 }
+
+STR_COLS = [col for col, dtype in CSV_FIELD_TYPES.items() if dtype is str]
 
 
 def get_list_of_candidate_data(df: pd.DataFrame) -> list[dict]:
-    candidates_data_list = []
-    for _, row in df.iterrows():
-        candidate_dictionary = {}
-        for fieldname in CSV_FIELD_TYPES:
-            candidate_dictionary[fieldname] = row[fieldname]
-        candidates_data_list.append(candidate_dictionary)
-    return candidates_data_list
+    return df.to_dict("records")
 
 
 def validate_election_data(df: pd.DataFrame) -> None:
     # TODO - do we care about duplicate people?
-    # duplicates = df[df.duplicated(subset=["person_id", "election_id"], keep=False)]
-    # if not duplicates.empty:
-    #     duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
-    #     raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
+    duplicates = df[df.duplicated(subset=["person_id", "election_id"], keep=False)]
+    if not duplicates.empty:
+        duplicate_vals = duplicates[["person_id", "election_id"]].drop_duplicates().to_dict("records")
+        raise ValueError(f"Duplicate (person_id, election_id) pairs found: {duplicate_vals}")
     inconsistent_party_data = (
         df.groupby("party_id")["party_name"]
         .nunique()
@@ -52,10 +48,9 @@ def validate_election_data(df: pd.DataFrame) -> None:
         raise ValueError(f"party_ids mapped to multiple party_names: {list(inconsistent_party_data.index)}")
 
 
-def get_and_validate_df(data: Path | io.StringIO):
+def get_and_validate_df(data: Path | io.StringIO) -> pd.DataFrame:
     df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())
-    str_cols = [col for col, dtype in CSV_FIELD_TYPES.items() if dtype is str]
-    df[str_cols] = df[str_cols].apply(lambda col: col.str.strip('"'))
+    df[STR_COLS] = df[STR_COLS].apply(lambda col: col.str.strip('"'))
     print(f"CSV file has {len(df)} rows")
     validate_election_data(df)
     return df
@@ -66,12 +61,11 @@ def read_csv_data_from_file(filepath: Path) -> pd.DataFrame:
     return get_and_validate_df(data=filepath)
 
 
-def read_csv_data_from_url(url: str, email: str | None, usage_reason: str | None) -> pd.DataFrame:
+def read_csv_data_from_url(url: str) -> pd.DataFrame:
     print(f"Reading data from {url}")
     response = httpx.get(url)
-    print(response.text[:200])
-    data = io.StringIO(response.text)
-    return get_and_validate_df(data=data)
+    response.raise_for_status()
+    return get_and_validate_df(data=io.StringIO(response.text))
 
 
 def get_candidate_data_by_column(df: pd.DataFrame, column_name: str) -> dict:
@@ -97,11 +91,8 @@ if __name__ == "__main__":
     # TODO - change this to read from a file instead
     # csv_filepath = Path(__file__).parent / "raw_data" / "dc-candidates-scotland-2026-04-02T16-17-27.csv"
     # df = read_csv_data_from_file(csv_filepath)
-    df = read_csv_data_from_url(DOWNLOAD_CSV_URL, None, None)
+    df = read_csv_data_from_url(DOWNLOAD_CSV_URL)
     candidates_by_election = get_candidate_data_by_column(df=df, column_name="election_id")
     write_out_json(data=candidates_by_election, filename_suffix="candidates_by_election")
     candidates_by_party_name = get_candidate_data_by_column(df=df, column_name="party_name")
     write_out_json(data=candidates_by_party_name, filename_suffix="candidates_by_party_name")
-
-
-

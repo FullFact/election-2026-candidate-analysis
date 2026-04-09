@@ -8,14 +8,10 @@ from main import (
     get_list_of_candidate_data,
     validate_election_data,
     get_and_validate_df,
+    CSV_FIELD_TYPES
 )
 
-ALL_FIELDS = [
-    "person_id", "person_name", "election_id", "party_name", "party_id",
-    "facebook_page_url", "facebook_personal_url", "linkedin_url",
-    "twitter_username", "youtube_profile", "instagram_url",
-    "blue_sky_url", "threads_url", "tiktok_url",
-]
+ALL_FIELDS = list(CSV_FIELD_TYPES.keys())
 
 
 def make_candidate(**overrides) -> dict:
