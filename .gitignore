@@ -162,3 +162,5 @@ cython_debug/
 .DS_Store
 .devenv/
 .direnv/
+
+*/data_outputs/*

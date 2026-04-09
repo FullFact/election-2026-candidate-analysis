@@ -1,7 +1,8 @@
-# Elections 2026 Analysis
+# Elections 2026 data
 
-Analysis of candidates from elections across the UK (May 2026).
+Get candidate data into the right format for the AI tools.
 
+This takes raw CSV data from [Democracy Club](https://democracyclub.org.uk/) and outputs it as a JSON file in various formats to be used in the AI tools.
 
 ## Set up
 * Clone the repo `git clone https://github.com/FullFact/election-2026-candidate-analysis.git`
@@ -10,12 +11,27 @@ Analysis of candidates from elections across the UK (May 2026).
 * `pre-commit install` to add pre-commit
 
 
-## Writing & running code
+## Running the code
 
-The `raw_data` folder contains the raw data (at the moment, data on Scottish elections, from Democracy Club).
-
-You can use `main.py` to run the analysis (`uv run python src/main.py`) or there is a Jupyter Notebook (`exploratory_analysis.ipynb`). Obviously you can create your own files too!
-
-The outputs should go into the `data_outputs` folder.
+To run the code: `uv run python src/main.py`. The output JSON files will be in the `data_outputs` folder.
 
 If you can't run this code locally, you can run it in GitHub Codespaces. Go to: https://github.com/codespaces/new - select this repo and your chosen branch. 
+
+### Updating the data
+The current code downloads all election candidate data for 7th March 2026 so you do not have to do it manually. 
+
+If you wish to read the CSV data from a file there is an option to do that (use `read_csv_data_from_file`).
+
+The `raw_data` folder contains existing raw data from the [Democracy Club](https://democracyclub.org.uk/).
+
+This data from Democracy Club is regularly updated, you can download the latest data from here if you wish: https://candidates.democracyclub.org.uk/data/. 
+
+
+## Tests
+`uv run pytest .`
+
+
+## Outstanding issues
+* What do we do about duplicate candidates for a given election? There is at least one example of a duplicate candidate in the same election list (looks like they are standing in 2 seats - ID 113862). You might want to deal with this and uncomment the code that checks for this in the `validate_election_data` function.
+* Have assumed social media doesn't include Mastodon (though that is available - but so far).
+* At present it includes candidates for all elections on 7th May (inc local elections) - do we need to remove the local ones?
