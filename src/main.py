@@ -54,6 +54,8 @@ def validate_election_data(df: pd.DataFrame) -> None:
 
 def get_and_validate_df(data: Path | io.StringIO):
     df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())
+    str_cols = [col for col, dtype in CSV_FIELD_TYPES.items() if dtype is str]
+    df[str_cols] = df[str_cols].apply(lambda col: col.str.strip('"'))
     print(f"CSV file has {len(df)} rows")
     validate_election_data(df)
     return df
