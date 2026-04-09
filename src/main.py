@@ -48,8 +48,8 @@ def validate_election_data(df: pd.DataFrame) -> None:
         raise ValueError(f"party_ids mapped to multiple party_names: {list(inconsistent_party_data.index)}")
 
 
-def get_and_validate_df(data: Path | io.StringIO) -> pd.DataFrame:
-    df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())
+def get_and_validate_df(data: Path | io.StringIO) -> pd.DataFrame: 
+    df = pd.read_csv(data, keep_default_na=False, dtype=CSV_FIELD_TYPES, usecols=CSV_FIELD_TYPES.keys())  # type: ignore
     df[STR_COLS] = df[STR_COLS].apply(lambda col: col.str.strip('"'))
     print(f"CSV file has {len(df)} rows")
     validate_election_data(df)

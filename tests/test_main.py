@@ -3,7 +3,7 @@ import io
 import pandas as pd
 import pytest
 
-from main import (
+from main import (  # type: ignore
     get_candidate_data_by_column,
     get_list_of_candidate_data,
     validate_election_data,
