@@ -16,7 +16,11 @@ dependencies = [
     "plotly>=6.6.0",
     "httpx>=0.28.1",
     "pandas-stubs>=3.0.0.260204",
+    "twscrape",
 ]
+
+[tool.uv.sources]
+twscrape = { git = "ssh://git@github.com/FullFact/twscrape.git", branch = "main" }
 
 [dependency-groups]
 dev = [
