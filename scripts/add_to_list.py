@@ -1,3 +1,7 @@
+"""
+Takes data from JSON an uploads to twitter list.
+"""
+
 import argparse
 import asyncio
 import json
@@ -85,7 +89,25 @@ async def add_to_list(api: API, list_id: str, user_id: int) -> dict:
     )
 
 
-async def main():
+async def add_username_to_list(api: API, list_id: str, username: str) -> bool:
+    """Resolve and add a username to a list. Returns False if rate limited."""
+    user_id = await resolve_user_id(api, username)
+    print(f"Got id {user_id} for {username}")
+    result = await add_to_list(api, list_id, user_id)
+    if "errors" in result:
+        print(f"  Error adding @{username}: {result['errors']}", file=sys.stderr)
+        codes = [r["code"] for r in result["errors"]]
+        if 104 in codes:
+            print("Rate limit reached")
+            return False
+        print(f"  Added @{username} (id={user_id})")  # Sometimes errors but still adds
+    else:
+        print(f"  Added @{username} (id={user_id})")
+    await asyncio.sleep(random.uniform(4, 10))
+    return True
+
+
+async def main() -> None:
     parser = argparse.ArgumentParser(description="Add Twitter users to a list")
     parser.add_argument(
         "--db",
@@ -127,17 +149,10 @@ async def main():
         usernames = [u.lstrip("@") for u in args.usernames]
         for username in usernames:
             try:
-                user_id = await resolve_user_id(api, username)
-                result = await add_to_list(api, args.list_id, user_id)
-                if "errors" in result:
-                    print(
-                        f"Error adding @{username}: {result['errors']}",
-                        file=sys.stderr,
-                    )
-                print(f"Added @{username} (id={user_id})")
+                if not await add_username_to_list(api, args.list_id, username):
+                    return
             except Exception as e:
                 print(f"Failed to add @{username}: {e}", file=sys.stderr)
-            await asyncio.sleep(random.uniform(4, 6))
 
     elif args.command == "from-json":
         with open(args.json_file) as f:
@@ -158,18 +173,10 @@ async def main():
             for username in usernames:
                 username = username.lstrip("@")
                 try:
-                    user_id = await resolve_user_id(api, username)
-                    print(f"Got id {user_id} for {username}")
-                    result = await add_to_list(api, list_id, user_id)
-                    if "errors" in result:
-                        print(
-                            f"  Error adding @{username}: {result['errors']}",
-                            file=sys.stderr,
-                        )
-                    print(f"  Added @{username} (id={user_id})")
+                    if not await add_username_to_list(api, list_id, username):
+                        return
                 except Exception as e:
                     print(f"  Failed to add @{username}: {e}", file=sys.stderr)
-                await asyncio.sleep(random.uniform(4, 10))
 
 
 if __name__ == "__main__":
