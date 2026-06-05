@@ -51,11 +51,19 @@ To create a new list:
 uv run python scripts/add_to_list.py from-json <PATH_TO_JSON> --prefix "Local 2026 - " --private
 ```
 
+
 To add to an existing list:
 ```
-python scripts/add_to_list.py manual --list-id <LIST_ID> username1 username2
+uv rub python scripts/add_to_list.py manual --list-id <LIST_ID> username1 username2
 ```
 You find the `<LIST_ID>` from the URL of the list in Twitter.
+
+
+To list all the members of a list:
+```
+uv run python scripts/add_to_list.py get-members --list-id <LIST_ID>
+```
+
 
 See more details and options on how to run in `add_to_list.py`.
 
