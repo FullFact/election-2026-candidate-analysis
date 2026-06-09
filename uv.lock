@@ -864,7 +864,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.10" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "structlog", specifier = ">=25.4.0" },
-    { name = "twscrape", git = "ssh://git@github.com/FullFact/twscrape.git?branch=main" },
+    { name = "twscrape", git = "https://github.com/FullFact/twscrape.git?branch=main" },
 ]
 
 [package.metadata.requires-dev]
@@ -945,7 +945,7 @@ wheels = [
 [[package]]
 name = "twscrape"
 version = "0.17.0"
-source = { git = "ssh://git@github.com/FullFact/twscrape.git?branch=main#eb24cd719a8529fc88892b2cff2d291ff9cae7c6" }
+source = { git = "https://github.com/FullFact/twscrape.git?branch=main#eb24cd719a8529fc88892b2cff2d291ff9cae7c6" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "beautifulsoup4" },
