@@ -12,7 +12,7 @@ Output format e.g.
 
 from pathlib import Path
 
-from main import read_csv_data_from_file, write_out_json
+from .main import read_csv_data_from_file, write_out_json
 
 CSV_FILENAME = "dc-candidates-election_date_2024-07-04__election_id_parl__field_group_results-person-candidacy__elected_true-2026-06-01T16-13-22"  # noqa
 
