@@ -1,3 +1,7 @@
+"""
+Takes data from JSON an uploads to twitter list.
+"""
+
 import argparse
 import asyncio
 import json
@@ -11,8 +15,12 @@ GQL_BASE = "https://x.com/i/api/graphql"
 LIST_ADD_MEMBER_QUERY_ID = "vWPi0CTMoPFsjsL6W4IynQ"
 LIST_ADD_MEMBER_URL = f"{GQL_BASE}/{LIST_ADD_MEMBER_QUERY_ID}/ListAddMember"
 
+LIST_MEMBER_QUERY_ID = "oIetCo19avgStX4mOnGsPg"
+LIST_MEMBER_URL = f"{GQL_BASE}/{LIST_MEMBER_QUERY_ID}/ListMembers"
+
 CREATE_LIST_QUERY_ID = "UQRa0jJ9doxGEIQRea1Y0w"
 CREATE_LIST_URL = f"{GQL_BASE}/{CREATE_LIST_QUERY_ID}/CreateList"
+
 
 GQL_FEATURES = {
     "rweb_tipjar_consumption_enabled": True,
@@ -85,7 +93,67 @@ async def add_to_list(api: API, list_id: str, user_id: int) -> dict:
     )
 
 
-async def main():
+def _parse_members_page(result: dict) -> tuple[list[str], str | None]:
+    instructions = result["data"]["list"]["members_timeline"]["timeline"][
+        "instructions"
+    ]
+    entries = next(
+        i["entries"] for i in instructions if i["type"] == "TimelineAddEntries"
+    )
+    screen_names = [
+        e["content"]["itemContent"]["user_results"]["result"]["core"]["screen_name"]
+        for e in entries
+        if e["content"].get("entryType") == "TimelineTimelineItem"
+    ]
+    cursor = next(
+        (
+            e["content"]["value"]
+            for e in entries
+            if e["content"].get("cursorType") == "Bottom"
+        ),
+        None,
+    )
+    return screen_names, cursor
+
+
+async def list_members(api: API, list_id: str) -> list[str]:
+    all_screen_names = []
+    cursor = None
+    while True:
+        variables = {"listId": list_id}
+        if cursor:
+            variables["cursor"] = cursor
+        result = await make_gql_request(
+            api, LIST_MEMBER_URL, LIST_MEMBER_QUERY_ID, variables
+        )
+        screen_names, cursor = _parse_members_page(result)
+        all_screen_names.extend(screen_names)
+        print(f"Fetched {len(screen_names)} members (total: {len(all_screen_names)})")
+        if not cursor or not screen_names:
+            break
+        await asyncio.sleep(random.uniform(2, 4))
+    return all_screen_names
+
+
+async def add_username_to_list(api: API, list_id: str, username: str) -> bool:
+    """Resolve and add a username to a list. Returns False if rate limited."""
+    user_id = await resolve_user_id(api, username)
+    print(f"Got id {user_id} for {username}")
+    result = await add_to_list(api, list_id, user_id)
+    if "errors" in result:
+        print(f"  Error adding @{username}: {result['errors']}", file=sys.stderr)
+        codes = [r["code"] for r in result["errors"]]
+        if 104 in codes:
+            print("Rate limit reached")
+            return False
+        print(f"  Added @{username} (id={user_id})")  # Sometimes errors but still adds
+    else:
+        print(f"  Added @{username} (id={user_id})")
+    await asyncio.sleep(random.uniform(4, 10))
+    return True
+
+
+async def main() -> None:
     parser = argparse.ArgumentParser(description="Add Twitter users to a list")
     parser.add_argument(
         "--db",
@@ -102,6 +170,11 @@ async def main():
     manual_parser.add_argument(
         "usernames", nargs="+", help="Twitter usernames to add (without @)"
     )
+
+    get_members_parser = subparsers.add_parser(
+        "get-members", help="Print all usernames in a list"
+    )
+    get_members_parser.add_argument("--list-id", required=True, help="Twitter list ID")
 
     from_json_parser = subparsers.add_parser(
         "from-json", help="Create lists from a party JSON file"
@@ -123,21 +196,18 @@ async def main():
     args = parser.parse_args()
     api = API(args.db)
 
-    if args.command == "manual":
+    if args.command == "get-members":
+        screen_names = await list_members(api, args.list_id)
+        print(",".join(screen_names))
+
+    elif args.command == "manual":
         usernames = [u.lstrip("@") for u in args.usernames]
         for username in usernames:
             try:
-                user_id = await resolve_user_id(api, username)
-                result = await add_to_list(api, args.list_id, user_id)
-                if "errors" in result:
-                    print(
-                        f"Error adding @{username}: {result['errors']}",
-                        file=sys.stderr,
-                    )
-                print(f"Added @{username} (id={user_id})")
+                if not await add_username_to_list(api, args.list_id, username):
+                    return
             except Exception as e:
                 print(f"Failed to add @{username}: {e}", file=sys.stderr)
-            await asyncio.sleep(random.uniform(4, 6))
 
     elif args.command == "from-json":
         with open(args.json_file) as f:
@@ -158,18 +228,10 @@ async def main():
             for username in usernames:
                 username = username.lstrip("@")
                 try:
-                    user_id = await resolve_user_id(api, username)
-                    print(f"Got id {user_id} for {username}")
-                    result = await add_to_list(api, list_id, user_id)
-                    if "errors" in result:
-                        print(
-                            f"  Error adding @{username}: {result['errors']}",
-                            file=sys.stderr,
-                        )
-                    print(f"  Added @{username} (id={user_id})")
+                    if not await add_username_to_list(api, list_id, username):
+                        return
                 except Exception as e:
                     print(f"  Failed to add @{username}: {e}", file=sys.stderr)
-                await asyncio.sleep(random.uniform(4, 10))
 
 
 if __name__ == "__main__":

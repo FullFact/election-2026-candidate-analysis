@@ -73,7 +73,7 @@ def get_candidate_data_by_column(
     df: pd.DataFrame, column_name: str, values: list[str] | None = None
 ) -> dict:
     unique_values = df[column_name].unique()
-    output_dictionary = {}
+    output_dictionary: dict[str, list] = {}
     for val in unique_values:
         col = val
         if values and col not in values:

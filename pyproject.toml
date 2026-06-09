@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-twscrape = { git = "ssh://git@github.com/FullFact/twscrape.git", branch = "main" }
+twscrape = { git = "https://github.com/FullFact/twscrape.git", branch = "main" }
 
 [dependency-groups]
 dev = [
